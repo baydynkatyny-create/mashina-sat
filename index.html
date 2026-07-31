@@ -1,49 +1,301 @@
-body {
-    margin: 0;
-    padding: 0;
-    background: #111;
-    font-family: Arial, sans-serif;
-    color: #fff;
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кыргыз Авто</title>
+
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, sans-serif; background: #f2f2f2; }
+header { background: #111; color: white; padding: 20px; text-align: center; }
+header h1 { margin: 0; }
+.container { width: 94%; max-width: 700px; margin: 20px auto; }
+.panel { background: white; padding: 18px; border-radius: 14px; margin-bottom: 18px; box-shadow: 0 2px 8px #ccc; }
+input, select, textarea { width: 100%; padding: 13px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+textarea { min-height: 100px; resize: vertical; }
+button { width: 100%; padding: 15px; border: none; border-radius: 9px; font-size: 17px; font-weight: bold; }
+.add { background: #ffd700; }
+.save { background: #16a34a; color: white; }
+.close { background: #ddd; margin-top: 8px; }
+.form { display: none; }
+.photo { background: #eee; padding: 15px; text-align: center; border-radius: 8px; margin-bottom: 12px; }
+.card { background: white; border-radius: 14px; overflow: hidden; margin-bottom: 18px; box-shadow: 0 2px 8px #ccc; }
+.card img { width: 100%; height: 220px; object-fit: cover; }
+.card-content { padding: 15px; }
+.card h2 { margin: 0 0 8px; }
+.price { color: #16a34a; font-size: 22px; font-weight: bold; margin-bottom: 10px; }
+.info { color: #555; margin: 5px 0; }
+.phone { display: block; background: #2563eb; color: white; text-align: center; padding: 13px; margin-top: 12px; border-radius: 8px; text-decoration: none; }
+.search { margin-bottom: 10px; }
+.empty { text-align: center; padding: 30px; color: #777; }
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🚗 Кыргыз Авто</h1>
+    <p>Машина сатып ал • Машина сат</p>
+</header>
+
+<div class="container">
+
+    <div class="panel">
+        <input id="minPrice" type="number" placeholder="💰 Минималдуу баа" oninput="showCars()">
+        <input id="maxPrice" type="number" placeholder="💰 Максималдуу баа" oninput="showCars()">
+        <select id="filterBrand" onchange="showCars()">
+            <option value="">🚗 Бардык маркалар</option>
+            <option>Toyota</option><option>BMW</option><option>Mercedes-Benz</option>
+            <option>Lexus</option><option>Honda</option><option>Hyundai</option>
+            <option>Kia</option><option>Volkswagen</option><option>Audi</option>
+            <option>Nissan</option><option>Mitsubishi</option><option>Subaru</option>
+            <option>Chevrolet</option><option>Ford</option><option>Land Rover</option>
+            <option>Porsche</option><option>Tesla</option><option>Geely</option>
+            <option>Chery</option><option>BYD</option>
+        </select>
+        <input class="search" id="search" type="text" placeholder="🔎 Машина издөө..." oninput="showCars()">
+        <button class="add" onclick="openForm()">➕ Машина жарыялоо</button>
+    </div>
+
+    <div class="panel form" id="form">
+        <h2>🚗 Жаңы жарыя</h2>
+
+        <label>Маркасы</label>
+        <select id="brand" onchange="changeModel()">
+            <option value="">Марка тандаңыз</option>
+            <option>Toyota</option><option>BMW</option><option>Mercedes-Benz</option>
+            <option>Lexus</option><option>Honda</option><option>Hyundai</option>
+            <option>Kia</option><option>Volkswagen</option><option>Audi</option>
+            <option>Nissan</option><option>Mitsubishi</option><option>Subaru</option>
+            <option>Chevrolet</option><option>Ford</option><option>Land Rover</option>
+            <option>Porsche</option><option>Tesla</option><option>Geely</option>
+            <option>Chery</option><option>BYD</option>
+        </select>
+
+        <label>Модели</label>
+        <select id="model"><option value="">Адегенде марка тандаңыз</option></select>
+
+        <label>Жылы</label>
+        <select id="year"><option value="">Жыл тандаңыз</option></select>
+
+        <label>Кузов түрү</label>
+        <select id="body">
+            <option value="">Кузов тандаңыз</option>
+            <option>Седан</option><option>Хэтчбек</option><option>Универсал</option>
+            <option>Кроссовер</option><option>Внедорожник</option><option>Минивэн</option>
+            <option>Пикап</option><option>Купе</option><option>Кабриолет</option>
+        </select>
+
+        <label>Күйүүчү май</label>
+        <select id="fuel">
+            <option value="">Тандаңыз</option>
+            <option>Бензин</option><option>Дизель</option><option>Газ</option>
+            <option>Гибрид</option><option>Электр</option>
+        </select>
+
+        <label>Коробка</label>
+        <select id="transmission">
+            <option value="">Тандаңыз</option>
+            <option>Автомат</option><option>Механика</option><option>Вариатор</option><option>Робот</option>
+        </select>
+
+        <label>Жетек</label>
+        <select id="drive">
+            <option value="">Тандаңыз</option>
+            <option>Алдыңкы</option><option>Арткы</option><option>4WD</option><option>AWD</option>
+        </select>
+
+        <label>Пробег (км)</label>
+        <input id="mileage" type="number" placeholder="Мисалы: 125000">
+
+        <label>Түсү</label>
+        <select id="color">
+            <option value="">Түс тандаңыз</option>
+            <option>Ак</option><option>Кара</option><option>Күмүш</option><option>Боз</option>
+            <option>Көк</option><option>Кызыл</option><option>Жашыл</option><option>Сары</option><option>Күрөң</option>
+        </select>
+
+        <label>Баасы (сом)</label>
+        <input id="price" type="number" placeholder="Мисалы: 1250000">
+
+        <label>Шаар</label>
+        <select id="city">
+            <option value="">Шаар тандаңыз</option>
+            <option>Бишкек</option><option>Ош</option><option>Жалал-Абад</option>
+            <option>Каракол</option><option>Токмок</option><option>Нарын</option>
+            <option>Талас</option><option>Баткен</option><option>Кызыл-Кыя</option>
+        </select>
+
+        <label>Телефон</label>
+        <input id="phone" type="tel" placeholder="+996 XXX XXX XXX">
+
+        <div class="photo">
+            📸 Машинанын сүрөтү
+            <input id="photo" type="file" accept="image/*">
+        </div>
+
+        <textarea id="description" placeholder="Машина тууралуу толук маалымат..."></textarea>
+
+        <button class="save" onclick="addCar()">✅ Жарыяны чыгаруу</button>
+        <button class="close" onclick="closeForm()">Жабуу</button>
+    </div>
+
+    <div id="cars"></div>
+
+</div>
+
+<script>
+const models = {
+    Toyota: ["Camry","Corolla","Prius","RAV4","Land Cruiser 100","Land Cruiser 200","Land Cruiser 300","Prado","Highlander","Harrier","Vitz","Aqua","Crown","Mark II","Alphard","Hiace"],
+    BMW: ["3 Series","5 Series","7 Series","X1","X3","X5","X6","X7","M3","M5"],
+    "Mercedes-Benz": ["C-Class","E-Class","S-Class","A-Class","GLA","GLC","GLE","GLS","G-Class","V-Class"],
+    Lexus: ["ES","IS","GS","LS","NX","RX","GX","LX"],
+    Honda: ["Civic","Accord","CR-V","Fit","Pilot","Odyssey"],
+    Hyundai: ["Accent","Elantra","Sonata","Tucson","Santa Fe","Palisade","Creta"],
+    Kia: ["Rio","K5","K7","Sportage","Sorento","Carnival","Seltos"],
+    Volkswagen: ["Golf","Passat","Jetta","Polo","Tiguan","Touareg"],
+    Audi: ["A3","A4","A6","A8","Q3","Q5","Q7","Q8"],
+    Nissan: ["Almera","Teana","X-Trail","Qashqai","Patrol","Murano","Serena"],
+    Mitsubishi: ["Lancer","Outlander","Pajero","Pajero Sport","ASX"],
+    Subaru: ["Forester","Impreza","Legacy","Outback","XV"],
+    Chevrolet: ["Malibu","Cobalt","Nexia","Spark","Tracker","Tahoe"],
+    Ford: ["Focus","Fusion","Explorer","Escape","Mustang","F-150"],
+    "Land Rover": ["Range Rover","Range Rover Sport","Discovery","Defender","Evoque"],
+    Porsche: ["Cayenne","Panamera","Macan","911"],
+    Tesla: ["Model 3","Model S","Model X","Model Y"],
+    Geely: ["Coolray","Atlas","Monjaro","Emgrand"],
+    Chery: ["Tiggo 4","Tiggo 7","Tiggo 8","Arrizo 5"],
+    BYD: ["Dolphin","Atto 3","Han","Tang","Seal"]
+};
+
+const yearSelect = document.getElementById("year");
+for (let year = 2026; year >= 1980; year--) {
+    const option = document.createElement("option");
+    option.value = year;
+    option.textContent = year;
+    yearSelect.appendChild(option);
 }
 
-header {
-    background: #FFD700;
-    color: #000;
-    text-align: center;
-    padding: 15px;
-    font-size: 24px;
-    font-weight: bold;
+function changeModel() {
+    const brand = document.getElementById("brand").value;
+    const model = document.getElementById("model");
+    model.innerHTML = '<option value="">Модель тандаңыз</option>';
+    if (!models[brand]) return;
+    models[brand].forEach(function(name) {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        model.appendChild(option);
+    });
 }
 
-.container {
-    padding: 20px;
+function openForm() {
+    document.getElementById("form").style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-input {
-    width: 100%;
-    padding: 15px;
-    margin: 10px 0;
-    border: none;
-    border-radius: 10px;
-    font-size: 18px;
-    box-sizing: border-box;
+function closeForm() {
+    document.getElementById("form").style.display = "none";
 }
 
-button {
-    width: 100%;
-    padding: 15px;
-    background: #FFD700;
-    color: #000;
-    border: none;
-    border-radius: 10px;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
+let cars = JSON.parse(localStorage.getItem("cars")) || [];
+
+function addCar() {
+    const brand = document.getElementById("brand").value;
+    const model = document.getElementById("model").value;
+    const year = document.getElementById("year").value;
+    const body = document.getElementById("body").value;
+    const fuel = document.getElementById("fuel").value;
+    const transmission = document.getElementById("transmission").value;
+    const drive = document.getElementById("drive").value;
+    const mileage = document.getElementById("mileage").value;
+    const color = document.getElementById("color").value;
+    const price = document.getElementById("price").value;
+    const city = document.getElementById("city").value;
+    const phone = document.getElementById("phone").value;
+    const description = document.getElementById("description").value;
+    const photoInput = document.getElementById("photo");
+
+    if (!brand || !model || !year || !body || !fuel || !transmission || !drive || !price || !city || !phone) {
+        alert("Бардык негизги талааларды толтуруңуз!");
+        return;
+    }
+
+    const file = photoInput.files[0];
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            saveCar(brand, model, year, body, fuel, transmission, drive, mileage, color, price, city, phone, description, event.target.result);
+        };
+        reader.readAsDataURL(file);
+    } else {
+        saveCar(brand, model, year, body, fuel, transmission, drive, mileage, color, price, city, phone, description, "");
+    }
 }
 
-#map {
-    width: 100%;
-    height: 400px;
-    margin-top: 20px;
-    border-radius: 10px;
+function saveCar(brand, model, year, body, fuel, transmission, drive, mileage, color, price, city, phone, description, photo) {
+    const car = { brand, model, year, body, fuel, transmission, drive, mileage, color, price, city, phone, description, photo };
+    cars.unshift(car);
+    localStorage.setItem("cars", JSON.stringify(cars));
+    document.getElementById("form").reset?.();
+    closeForm();
+    showCars();
+    alert("✅ Жарыя ийгиликтүү кошулду!");
 }
+
+function showCars() {
+    const list = document.getElementById("cars");
+    const search = document.getElementById("search").value.toLowerCase();
+    const minPrice = Number(document.getElementById("minPrice").value) || 0;
+    const maxPrice = Number(document.getElementById("maxPrice").value) || Infinity;
+
+    const filtered = cars.filter(function(car) {
+        const text = (car.brand + " " + car.model + " " + car.city).toLowerCase();
+        const matchesSearch = text.includes(search);
+        const carPrice = Number(car.price);
+        const matchesPrice = carPrice >= minPrice && carPrice <= maxPrice;
+        return matchesSearch && matchesPrice;
+    });
+
+    if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty">🚗 Азырынча жарыя жок</div>';
+        return;
+    }
+
+    list.innerHTML = "";
+
+    filtered.forEach(function(car) {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const image = car.photo ? `<img src="${car.photo}">` : "";
+
+        card.innerHTML = `
+            ${image}
+            <div class="card-content">
+                <h2>${car.brand} ${car.model}</h2>
+                <div class="price">${Number(car.price).toLocaleString()} сом</div>
+                <div class="info">📅 Жылы: ${car.year}</div>
+                <div class="info">🚘 Кузов: ${car.body}</div>
+                <div class="info">⛽ Мотор: ${car.fuel}</div>
+                <div class="info">⚙️ Коробка: ${car.transmission}</div>
+                <div class="info">🛞 Жетек: ${car.drive}</div>
+                <div class="info">📏 Пробег: ${car.mileage || "көрсөтүлгөн эмес"} км</div>
+                <div class="info">🎨 Түсү: ${car.color || "көрсөтүлгөн эмес"}</div>
+                <div class="info">📍 ${car.city}</div>
+                <p>${car.description || ""}</p>
+                <a class="phone" href="tel:${car.phone}">📞 ${car.phone}</a>
+            </div>
+        `;
+
+        list.appendChild(card);
+    });
+}
+
+showCars();
+</script>
+
+</body>
+</html>
