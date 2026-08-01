@@ -19,14 +19,13 @@ header h1 { margin: 0; }
 input, select, textarea { width: 100%; padding: 13px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
 textarea { min-height: 100px; resize: vertical; }
 button { width: 100%; padding: 15px; border: none; border-radius: 9px; font-size: 17px; font-weight: bold; }
-button:disabled { opacity: 0.6; }
 .add { background: #ffd700; }
 .save { background: #16a34a; color: white; }
 .close { background: #ddd; margin-top: 8px; }
 .form { display: none; }
 .photo { background: #eee; padding: 15px; text-align: center; border-radius: 8px; margin-bottom: 12px; }
 .card { background: white; border-radius: 14px; overflow: hidden; margin-bottom: 18px; box-shadow: 0 2px 8px #ccc; }
-.card img { width: 100%; height: 220px; object-fit: cover; background: #ddd; }
+.card img { width: 100%; height: 220px; object-fit: cover; }
 .card-content { padding: 15px; }
 .card h2 { margin: 0 0 8px; }
 .price { color: #16a34a; font-size: 22px; font-weight: bold; margin-bottom: 10px; }
@@ -34,7 +33,7 @@ button:disabled { opacity: 0.6; }
 .phone { display: block; background: #2563eb; color: white; text-align: center; padding: 13px; margin-top: 12px; border-radius: 8px; text-decoration: none; }
 .search { margin-bottom: 10px; }
 .empty { text-align: center; padding: 30px; color: #777; }
-.loading { text-align: center; padding: 30px; color: #777; }
+.loading { text-align: center; padding: 30px; color: #999; }
 </style>
 </head>
 
@@ -43,12 +42,6 @@ button:disabled { opacity: 0.6; }
 <header>
     <h1>🚗 Кыргыз Авто</h1>
     <p>Машина сатып ал • Машина сат</p>
-
-    <nav style="margin-top:15px; display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
-    <a href="#" style="color:white; text-decoration:none; font-weight:bold;">🏠 Башкы бет</a>
-    <a href="#cars" style="color:white; text-decoration:none; font-weight:bold;">🚗 Унаалар</a>
-    <a href="https://wa.me/996228981828" target="_blank" style="color:white; text-decoration:none; font-weight:bold;">📞 Байланыш</a>
-    </nav>
 </header>
 
 <div class="container">
@@ -66,7 +59,7 @@ button:disabled { opacity: 0.6; }
             <option>Porsche</option><option>Tesla</option><option>Geely</option>
             <option>Chery</option><option>BYD</option>
         </select>
-        <input class="search" id="search" type="text" placeholder="🔎 Машина издөө... (мис. тойота камри)" oninput="showCars()">
+        <input class="search" id="search" type="text" placeholder="🔎 Машина издөө..." oninput="showCars()">
         <button class="add" onclick="openForm()">➕ Машина жарыялоо</button>
     </div>
 
@@ -149,34 +142,59 @@ button:disabled { opacity: 0.6; }
 
         <textarea id="description" placeholder="Машина тууралуу толук маалымат..."></textarea>
 
-        <button class="save" id="saveBtn" onclick="addCar()">✅ Жарыяны чыгаруу</button>
+        <button class="save" onclick="addCar()" id="saveBtn">✅ Жарыяны чыгаруу</button>
         <button class="close" onclick="closeForm()">Жабуу</button>
     </div>
 
-    <div id="cars"><div class="loading">⏳ Жүктөлүүдө...</div></div>
+    <div id="cars"><div class="loading">⏳ Жүктөлүп жатат...</div></div>
 
 </div>
 
 <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    onSnapshot,
+    query,
+    orderBy,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import {
+    getStorage,
+    ref,
+    uploadBytes,
+    getDownloadURL
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnCmsNUI8qm4K3MpRFNVIXtsN9Dk7OFqY",
+    authDomain: "kyrgyz-avto.firebaseapp.com",
+    projectId: "kyrgyz-avto",
+    storageBucket: "kyrgyz-avto.firebasestorage.app",
+    messagingSenderId: "537668219444",
+    appId: "1:537668219444:web:715a50dd4054a4faf3d061",
+    measurementId: "G-2ZJP03J20F"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+
+  window.firebaseApp = app;
+  window.firebaseDb = db;
+  window.firebaseStorage = storage;
+  window.firestoreFns = { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp };
+  window.storageFns = { ref, uploadBytes, getDownloadURL };
+
+  window.dispatchEvent(new Event("firebase-ready"));
+</script>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCnCmsNUI8qm4K3MpRFNVIXtsN9Dk7OFqY",
-  authDomain: "kyrgyz-avto.firebaseapp.com",
-  projectId: "kyrgyz-avto",
-  storageBucket: "kyrgyz-avto.firebasestorage.app",
-  messagingSenderId: "537668219444",
-  appId: "1:537668219444:web:715a50dd4054a4faf3d061",
-  measurementId: "G-2ZJP03J20F"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const storage = firebase.storage();
-
 const models = {
     Toyota: ["Camry","Corolla","Prius","RAV4","Land Cruiser 100","Land Cruiser 200","Land Cruiser 300","Prado","Highlander","Harrier","Vitz","Aqua","Crown","Mark II","Alphard","Hiace"],
     BMW: ["3 Series","5 Series","7 Series","X1","X3","X5","X6","X7","M3","M5"],
@@ -199,69 +217,6 @@ const models = {
     Chery: ["Tiggo 4","Tiggo 7","Tiggo 8","Arrizo 5"],
     BYD: ["Dolphin","Atto 3","Han","Tang","Seal"]
 };
-
-// Кирилл менен жазылганда да табылышы үчүн марка/модель аталыштарынын кыргызча/орусча варианттары
-const cyrillicAliases = {
-    Toyota: ["тойота"],
-    BMW: ["бмв"],
-    "Mercedes-Benz": ["мерседес", "мерс"],
-    Lexus: ["лексус"],
-    Honda: ["хонда"],
-    Hyundai: ["хендай", "хюндай"],
-    Kia: ["киа"],
-    Volkswagen: ["фольксваген", "вольксваген", "вв"],
-    Audi: ["ауди"],
-    Nissan: ["ниссан"],
-    Mitsubishi: ["митсубиши", "мицубиси"],
-    Subaru: ["субару"],
-    Chevrolet: ["шевроле"],
-    Ford: ["форд"],
-    "Land Rover": ["ленд ровер", "лэнд ровер"],
-    Porsche: ["порше"],
-    Tesla: ["тесла"],
-    Geely: ["джили", "гили"],
-    Chery: ["чери"],
-    BYD: ["бид", "быд"],
-    Camry: ["камри"],
-    Corolla: ["королла", "королла"],
-    Prius: ["приус"],
-    RAV4: ["рав4", "рав 4"],
-    "Land Cruiser 100": ["ленд крузер 100", "крузак 100", "лк 100"],
-    "Land Cruiser 200": ["ленд крузер 200", "крузак 200", "лк 200"],
-    "Land Cruiser 300": ["ленд крузер 300", "крузак 300", "лк 300"],
-    Prado: ["прадо"],
-    Highlander: ["хайлендер"],
-    Harrier: ["харриер"],
-    Alphard: ["альфард"],
-    Hiace: ["хайс", "хайэйс"],
-    "C-Class": ["си класс"],
-    "E-Class": ["е класс"],
-    "S-Class": ["эс класс"],
-    "G-Class": ["гелик", "гелендваген"],
-    Tucson: ["туксон"],
-    "Santa Fe": ["санта фе"],
-    Elantra: ["элантра"],
-    Accent: ["акцент"],
-    Sportage: ["спортейдж"],
-    Sorento: ["соренто"],
-    Rio: ["рио"],
-    "X-Trail": ["х трейл", "экс трейл"],
-    Qashqai: ["кашкай"],
-    Patrol: ["патрол"],
-    "Range Rover": ["рендж ровер", "ренж ровер"],
-    Pajero: ["паджеро"],
-    Outlander: ["аутлендер"],
-    Forester: ["форестер"]
-};
-
-let cars = [];
-
-function buildSearchText(brand, model, city, description) {
-    let parts = [brand, model, city, description || ""];
-    if (cyrillicAliases[brand]) parts = parts.concat(cyrillicAliases[brand]);
-    if (cyrillicAliases[model]) parts = parts.concat(cyrillicAliases[model]);
-    return parts.join(" ").toLowerCase();
-}
 
 const yearSelect = document.getElementById("year");
 for (let year = 2026; year >= 1980; year--) {
@@ -293,7 +248,9 @@ function closeForm() {
     document.getElementById("form").style.display = "none";
 }
 
-function addCar() {
+let cars = [];
+
+async function addCar() {
     const brand = document.getElementById("brand").value;
     const model = document.getElementById("model").value;
     const year = document.getElementById("year").value;
@@ -316,58 +273,51 @@ function addCar() {
 
     const saveBtn = document.getElementById("saveBtn");
     saveBtn.disabled = true;
-    saveBtn.textContent = "⏳ Жүктөлүүдө...";
+    saveBtn.textContent = "⏳ Жарыяланып жатат...";
 
-    const file = photoInput.files[0];
+    try {
+        let photoUrl = "";
+        const file = photoInput.files[0];
 
-    if (file) {
-        const path = "cars/" + Date.now() + "_" + file.name;
-        const ref = storage.ref().child(path);
-        ref.put(file).then(function(snapshot) {
-            return snapshot.ref.getDownloadURL();
-        }).then(function(url) {
-            saveCar(brand, model, year, body, fuel, transmission, drive, mileage, color, price, city, phone, description, url);
-        }).catch(function(err) {
-            console.error(err);
-            alert("Сүрөттү жүктөөдө ката кетти: " + err.message);
-            saveBtn.disabled = false;
-            saveBtn.textContent = "✅ Жарыяны чыгаруу";
+        if (file) {
+            const { ref, uploadBytes, getDownloadURL } = window.storageFns;
+            const fileRef = ref(window.firebaseStorage, "cars/" + Date.now() + "_" + file.name);
+            await uploadBytes(fileRef, file);
+            photoUrl = await getDownloadURL(fileRef);
+        }
+
+        const { collection, addDoc, serverTimestamp } = window.firestoreFns;
+        await addDoc(collection(window.firebaseDb, "cars"), {
+            brand, model, year, body, fuel, transmission, drive,
+            mileage, color, price, city, phone, description,
+            photo: photoUrl,
+            createdAt: serverTimestamp()
         });
-    } else {
-        saveCar(brand, model, year, body, fuel, transmission, drive, mileage, color, price, city, phone, description, "");
-    }
-}
 
-function saveCar(brand, model, year, body, fuel, transmission, drive, mileage, color, price, city, phone, description, photo) {
-    const car = {
-        brand, model, year, body, fuel, transmission, drive, mileage, color, price, city, phone, description, photo,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    db.collection("cars").add(car).then(function() {
-        document.getElementById("form").reset?.();
         closeForm();
         alert("✅ Жарыя ийгиликтүү кошулду!");
-    }).catch(function(err) {
-        console.error(err);
-        alert("Сактоодо ката кетти: " + err.message);
-    }).finally(function() {
-        const saveBtn = document.getElementById("saveBtn");
+        document.getElementById("form").querySelectorAll("input, select, textarea").forEach(function(el) {
+            if (el.type !== "button") el.value = "";
+        });
+    } catch (error) {
+        console.error(error);
+        alert("❌ Ката кетти: " + error.message);
+    } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = "✅ Жарыяны чыгаруу";
-    });
+    }
 }
 
 function showCars() {
     const list = document.getElementById("cars");
-    const search = document.getElementById("search").value.toLowerCase().trim();
+    const search = document.getElementById("search").value.toLowerCase();
     const minPrice = Number(document.getElementById("minPrice").value) || 0;
     const maxPrice = Number(document.getElementById("maxPrice").value) || Infinity;
     const filterBrand = document.getElementById("filterBrand").value;
 
     const filtered = cars.filter(function(car) {
-        const text = buildSearchText(car.brand, car.model, car.city, car.description);
-        const matchesSearch = search === "" || text.includes(search);
+        const text = (car.brand + " " + car.model + " " + car.city).toLowerCase();
+        const matchesSearch = text.includes(search);
         const carPrice = Number(car.price);
         const matchesPrice = carPrice >= minPrice && carPrice <= maxPrice;
         const matchesBrand = !filterBrand || car.brand === filterBrand;
@@ -375,19 +325,19 @@ function showCars() {
     });
 
     if (filtered.length === 0) {
-        list.innerHTML = '<div class="empty">🚗 Жарыя табылган жок</div>';
+        list.innerHTML = '<div class="empty">🚗 Азырынча жарыя жок</div>';
         return;
     }
 
     list.innerHTML = "";
 
     filtered.forEach(function(car) {
-        const card = document.createElement("div");
-        card.className = "card";
+        const cardEl = document.createElement("div");
+        cardEl.className = "card";
 
-        const image = car.photo ? `<img src="${car.photo}" loading="lazy">` : "";
+        const image = car.photo ? `<img src="${car.photo}">` : "";
 
-        card.innerHTML = `
+        cardEl.innerHTML = `
             ${image}
             <div class="card-content">
                 <h2>${car.brand} ${car.model}</h2>
@@ -405,22 +355,25 @@ function showCars() {
             </div>
         `;
 
-        list.appendChild(card);
+        list.appendChild(cardEl);
     });
 }
 
-// Firestore'дон реалдуу убакытта угуу - бир колдонуучу жарыя кошсо, башкалар да дароо көрөт
-db.collection("cars").orderBy("createdAt", "desc").onSnapshot(function(snapshot) {
-    cars = snapshot.docs.map(function(doc) {
-        return Object.assign({ id: doc.id }, doc.data());
+window.addEventListener("firebase-ready", function() {
+    const { collection, onSnapshot, query, orderBy } = window.firestoreFns;
+    const carsQuery = query(collection(window.firebaseDb, "cars"), orderBy("createdAt", "desc"));
+
+    onSnapshot(carsQuery, function(snapshot) {
+        cars = snapshot.docs.map(function(doc) {
+            return Object.assign({ id: doc.id }, doc.data());
+        });
+        showCars();
+    }, function(error) {
+        console.error("Firestore error:", error);
+        document.getElementById("cars").innerHTML = '<div class="empty">❌ Маалымат жүктөлбөдү. Интернетти текшериңиз.</div>';
     });
-    showCars();
-}, function(err) {
-    console.error(err);
-    document.getElementById("cars").innerHTML = '<div class="empty">⚠️ Дайындарды жүктөөдө ката кетти: ' + err.message + '</div>';
 });
 </script>
 
 </body>
-    </html>
-            
+                                       </html>
