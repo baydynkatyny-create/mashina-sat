@@ -8,7 +8,6 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#111111">
-
 <style>
 * { box-sizing: border-box; }
 body { margin: 0; font-family: Arial, sans-serif; background: #f2f2f2; }
@@ -18,14 +17,25 @@ header h1 { margin: 0; }
 .panel { background: white; padding: 18px; border-radius: 14px; margin-bottom: 18px; box-shadow: 0 2px 8px #ccc; }
 input, select, textarea { width: 100%; padding: 13px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
 textarea { min-height: 100px; resize: vertical; }
-button { width: 100%; padding: 15px; border: none; border-radius: 9px; font-size: 17px; font-weight: bold; }
+button { width: 100%; padding: 15px; border: none; border-radius: 9px; font-size: 17px; font-weight: bold; cursor: pointer; }
 .add { background: #ffd700; }
 .save { background: #16a34a; color: white; }
 .close { background: #ddd; margin-top: 8px; }
 .form { display: none; }
 .photo { background: #eee; padding: 15px; text-align: center; border-radius: 8px; margin-bottom: 12px; }
-.card { background: white; border-radius: 14px; overflow: hidden; margin-bottom: 18px; box-shadow: 0 2px 8px #ccc; }
-.card img { width: 100%; height: 220px; object-fit: cover; }
+.photo small { display: block; margin-top: 6px; color: #777; }
+.card { background: white; border-radius: 14px; overflow: hidden; margin-bottom: 18px; box-shadow: 0 2px 8px #ccc; cursor: pointer; }
+.card-gallery { position: relative; width: 100%; height: 220px; background: #ddd; overflow: hidden; }
+.card-gallery img { width: 100%; height: 220px; object-fit: cover; display: none; }
+.card-gallery img.active { display: block; }
+.card-gallery .noPhoto { display: flex; align-items: center; justify-content: center; height: 220px; color: #999; font-size: 40px; }
+.gallery-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.4); color: white; border: none; width: 34px; height: 34px; border-radius: 50%; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+.gallery-nav.prev { left: 8px; }
+.gallery-nav.next { right: 8px; }
+.gallery-dots { position: absolute; bottom: 8px; left: 0; right: 0; display: flex; justify-content: center; gap: 5px; }
+.gallery-dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.6); }
+.gallery-dots span.active { background: white; }
+.gallery-count { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.5); color: white; font-size: 12px; padding: 2px 8px; border-radius: 10px; }
 .card-content { padding: 15px; }
 .card h2 { margin: 0 0 8px; }
 .price { color: #16a34a; font-size: 22px; font-weight: bold; margin-bottom: 10px; }
@@ -34,346 +44,415 @@ button { width: 100%; padding: 15px; border: none; border-radius: 9px; font-size
 .search { margin-bottom: 10px; }
 .empty { text-align: center; padding: 30px; color: #777; }
 .loading { text-align: center; padding: 30px; color: #999; }
+
+/* Detail modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto; }
+.modal-overlay.open { display: block; }
+.modal-box { background: white; width: 94%; max-width: 700px; margin: 20px auto; border-radius: 14px; overflow: hidden; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: #111; color: white; }
+.modal-header button { width: auto; padding: 6px 12px; background: transparent; color: white; font-size: 20px; }
+.modal-gallery { position: relative; width: 100%; height: 260px; background: #ddd; }
+.modal-gallery img { width: 100%; height: 260px; object-fit: cover; display: none; }
+.modal-gallery img.active { display: block; }
+.modal-body { padding: 16px; }
+.thumb-row { display: flex; gap: 8px; overflow-x: auto; padding: 10px 16px 0; }
+.thumb-row img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; opacity: 0.6; flex-shrink: 0; cursor: pointer; }
+.thumb-row img.active { opacity: 1; outline: 2px solid #16a34a; }
+
+/* Support widget */
+.support-btn { position: fixed; bottom: 18px; right: 18px; background: #2563eb; color: white; border: none; width: 56px; height: 56px; border-radius: 50%; font-size: 26px; box-shadow: 0 3px 10px rgba(0,0,0,0.3); z-index: 900; cursor: pointer; }
+.support-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; }
+.support-overlay.open { display: flex; align-items: flex-end; justify-content: center; }
+.support-box { background: white; width: 94%; max-width: 500px; border-radius: 14px 14px 0 0; padding: 20px; }
+.support-box h3 { margin-top: 0; }
+.support-link { display: flex; align-items: center; gap: 10px; padding: 13px; border-radius: 8px; margin-bottom: 10px; text-decoration: none; color: white; font-weight: bold; }
+.support-link.wa { background: #25D366; }
+.support-link.tg { background: #229ED9; }
+.support-link.call { background: #2563eb; }
 </style>
 </head>
-
 <body>
 
 <header>
-    <h1>🚗 Кыргыз Авто</h1>
-    <p>Машина сатып ал • Машина сат</p>
+<h1>🚗 Кыргыз Авто</h1>
+<p>Машина сатып ал • Машина сат</p>
 </header>
 
 <div class="container">
 
-    <div class="panel">
-        <input id="minPrice" type="number" placeholder="💰 Минималдуу баа" oninput="showCars()">
-        <input id="maxPrice" type="number" placeholder="💰 Максималдуу баа" oninput="showCars()">
-        <select id="filterBrand" onchange="showCars()">
-            <option value="">🚗 Бардык маркалар</option>
-            <option>Toyota</option><option>BMW</option><option>Mercedes-Benz</option>
-            <option>Lexus</option><option>Honda</option><option>Hyundai</option>
-            <option>Kia</option><option>Volkswagen</option><option>Audi</option>
-            <option>Nissan</option><option>Mitsubishi</option><option>Subaru</option>
-            <option>Chevrolet</option><option>Ford</option><option>Land Rover</option>
-            <option>Porsche</option><option>Tesla</option><option>Geely</option>
-            <option>Chery</option><option>BYD</option>
-        </select>
-        <input class="search" id="search" type="text" placeholder="🔎 Машина издөө..." oninput="showCars()">
-        <button class="add" onclick="openForm()">➕ Машина жарыялоо</button>
-    </div>
+<div class="panel">
+<input id="minPrice" type="number" placeholder="💰 Минималдуу баа" oninput="showCars()">
+<input id="maxPrice" type="number" placeholder="💰 Максималдуу баа" oninput="showCars()">
+<select id="filterBrand" onchange="showCars()">
+<option value="">🚗 Бардык маркалар</option>
+<option>Toyota</option><option>BMW</option><option>Mercedes-Benz</option>
+<option>Lexus</option><option>Honda</option><option>Hyundai</option>
+<option>Kia</option><option>Volkswagen</option><option>Audi</option>
+<option>Nissan</option><option>Mitsubishi</option><option>Subaru</option>
+<option>Chevrolet</option><option>Ford</option><option>Land Rover</option>
+<option>Porsche</option><option>Tesla</option><option>Geely</option>
+<option>Chery</option><option>BYD</option>
+</select>
+<input class="search" id="search" type="text" placeholder="🔎 Машина издөө..." oninput="showCars()">
+<button class="add" onclick="openForm()">➕ Машина жарыялоо</button>
+</div>
 
-    <div class="panel form" id="form">
-        <h2>🚗 Жаңы жарыя</h2>
+<div class="panel form" id="form">
+<h2>🚗 Жаңы жарыя</h2>
 
-        <label>Маркасы</label>
-        <select id="brand" onchange="changeModel()">
-            <option value="">Марка тандаңыз</option>
-            <option>Toyota</option><option>BMW</option><option>Mercedes-Benz</option>
-            <option>Lexus</option><option>Honda</option><option>Hyundai</option>
-            <option>Kia</option><option>Volkswagen</option><option>Audi</option>
-            <option>Nissan</option><option>Mitsubishi</option><option>Subaru</option>
-            <option>Chevrolet</option><option>Ford</option><option>Land Rover</option>
-            <option>Porsche</option><option>Tesla</option><option>Geely</option>
-            <option>Chery</option><option>BYD</option>
-        </select>
+<label>Маркасы</label>
+<select id="brand" onchange="changeModel()">
+<option value="">Марка тандаңыз</option>
+<option>Toyota</option><option>BMW</option><option>Mercedes-Benz</option>
+<option>Lexus</option><option>Honda</option><option>Hyundai</option>
+<option>Kia</option><option>Volkswagen</option><option>Audi</option>
+<option>Nissan</option><option>Mitsubishi</option><option>Subaru</option>
+<option>Chevrolet</option><option>Ford</option><option>Land Rover</option>
+<option>Porsche</option><option>Tesla</option><option>Geely</option>
+<option>Chery</option><option>BYD</option>
+</select>
 
-        <label>Модели</label>
-        <select id="model"><option value="">Адегенде марка тандаңыз</option></select>
+<label>Модели</label>
+<select id="model"><option value="">Адегенде марка тандаңыз</option></select>
 
-        <label>Жылы</label>
-        <select id="year"><option value="">Жыл тандаңыз</option></select>
+<label>Жылы</label>
+<select id="year"><option value="">Жыл тандаңыз</option></select>
 
-        <label>Кузов түрү</label>
-        <select id="body">
-            <option value="">Кузов тандаңыз</option>
-            <option>Седан</option><option>Хэтчбек</option><option>Универсал</option>
-            <option>Кроссовер</option><option>Внедорожник</option><option>Минивэн</option>
-            <option>Пикап</option><option>Купе</option><option>Кабриолет</option>
-        </select>
+<label>Кузов түрү</label>
+<select id="body">
+<option value="">Кузов тандаңыз</option>
+<option>Седан</option><option>Хэтчбек</option><option>Универсал</option>
+<option>Кроссовер</option><option>Внедорожник</option><option>Минивэн</option>
+<option>Пикап</option><option>Купе</option><option>Кабриолет</option>
+</select>
 
-        <label>Күйүүчү май</label>
-        <select id="fuel">
-            <option value="">Тандаңыз</option>
-            <option>Бензин</option><option>Дизель</option><option>Газ</option>
-            <option>Гибрид</option><option>Электр</option>
-        </select>
+<label>Күйүүчү май</label>
+<select id="fuel">
+<option value="">Тандаңыз</option>
+<option>Бензин</option><option>Дизель</option><option>Газ</option>
+<option>Гибрид</option><option>Электр</option>
+</select>
 
-        <label>Коробка</label>
-        <select id="transmission">
-            <option value="">Тандаңыз</option>
-            <option>Автомат</option><option>Механика</option><option>Вариатор</option><option>Робот</option>
-        </select>
+<label>Коробка</label>
+<select id="transmission">
+<option value="">Тандаңыз</option>
+<option>Автомат</option><option>Механика</option><option>Вариатор</option><option>Робот</option>
+</select>
 
-        <label>Жетек</label>
-        <select id="drive">
-            <option value="">Тандаңыз</option>
-            <option>Алдыңкы</option><option>Арткы</option><option>4WD</option><option>AWD</option>
-        </select>
+<label>Жетек</label>
+<select id="drive">
+<option value="">Тандаңыз</option>
+<option>Алдыңкы</option><option>Арткы</option><option>4WD</option><option>AWD</option>
+</select>
 
-        <label>Пробег (км)</label>
-        <input id="mileage" type="number" placeholder="Мисалы: 125000">
+<label>Пробег (км)</label>
+<input id="mileage" type="number" placeholder="Мисалы: 125000">
 
-        <label>Түсү</label>
-        <select id="color">
-            <option value="">Түс тандаңыз</option>
-            <option>Ак</option><option>Кара</option><option>Күмүш</option><option>Боз</option>
-            <option>Көк</option><option>Кызыл</option><option>Жашыл</option><option>Сары</option><option>Күрөң</option>
-        </select>
+<label>Түсү</label>
+<select id="color">
+<option value="">Түс тандаңыз</option>
+<option>Ак</option><option>Кара</option><option>Күмүш</option><option>Боз</option>
+<option>Көк</option><option>Кызыл</option><option>Жашыл</option><option>Сары</option><option>Күрөң</option>
+</select>
 
-        <label>Баасы (сом)</label>
-        <input id="price" type="number" placeholder="Мисалы: 1250000">
+<label>Баасы (сом)</label>
+<input id="price" type="number" placeholder="Мисалы: 1250000">
 
-        <label>Шаар</label>
-        <select id="city">
-            <option value="">Шаар тандаңыз</option>
-            <option>Бишкек</option><option>Ош</option><option>Жалал-Абад</option>
-            <option>Каракол</option><option>Токмок</option><option>Нарын</option>
-            <option>Талас</option><option>Баткен</option><option>Кызыл-Кыя</option>
-        </select>
+<label>Шаар</label>
+<select id="city">
+<option value="">Шаар тандаңыз</option>
+<option>Бишкек</option><option>Ош</option><option>Жалал-Абад</option>
+<option>Каракол</option><option>Токмок</option><option>Нарын</option>
+<option>Талас</option><option>Баткен</option><option>Кызыл-Кыя</option>
+</select>
 
-        <label>Телефон</label>
-        <input id="phone" type="tel" placeholder="+996 XXX XXX XXX">
+<label>Телефон</label>
+<input id="phone" type="tel" placeholder="+996 XXX XXX XXX">
 
-        <div class="photo">
-            📸 Машинанын сүрөтү
-            <input id="photo" type="file" accept="image/*">
-        </div>
+<div class="photo">
+📸 Машинанын сүрөттөрү (бир нечесин тандасаңыз болот)
+<input id="photo" type="file" accept="image/*" multiple>
+<small id="photoCount"></small>
+</div>
 
-        <textarea id="description" placeholder="Машина тууралуу толук маалымат..."></textarea>
+<textarea id="description" placeholder="Машина тууралуу толук маалымат..."></textarea>
 
-        <button class="save" onclick="addCar()" id="saveBtn">✅ Жарыяны чыгаруу</button>
-        <button class="close" onclick="closeForm()">Жабуу</button>
-    </div>
+<button class="save" onclick="addCar()" id="saveBtn">✅ Жарыяны чыгаруу</button>
+<button class="close" onclick="closeForm()">Жабуу</button>
+</div>
 
-    <div id="cars"><div class="loading">⏳ Жүктөлүп жатат...</div></div>
+<div id="cars"><div class="loading">⏳ Жүктөлүп жатат...</div></div>
 
+</div>
+
+<!-- Car detail modal -->
+<div class="modal-overlay" id="detailOverlay" onclick="closeDetailOnOverlay(event)">
+<div class="modal-box" onclick="event.stopPropagation()">
+<div class="modal-header">
+<strong id="detailTitle">Машина</strong>
+<button onclick="closeDetail()">✕</button>
+</div>
+<div class="modal-gallery" id="modalGallery">
+<div class="noPhoto">📷</div>
+</div>
+<div class="thumb-row" id="thumbRow"></div>
+<div class="modal-body" id="detailBody"></div>
+</div>
+</div>
+
+<!-- Support widget -->
+<button class="support-btn" onclick="openSupport()" title="Колдоо кызматы">💬</button>
+<div class="support-overlay" id="supportOverlay" onclick="closeSupportOnOverlay(event)">
+<div class="support-box" onclick="event.stopPropagation()">
+<h3>💬 Колдоо кызматы</h3>
+<p>Сурооңуз барбы же жардам керекпи? Биз менен байланышыңыз:</p>
+<a class="support-link wa" id="supportWa" href="#" target="_blank">🟢 WhatsApp аркылуу жазуу</a>
+<a class="support-link tg" id="supportTg" href="#" target="_blank">✈️ Telegram аркылуу жазуу</a>
+<a class="support-link call" id="supportCall" href="#">📞 Чалуу</a>
+<button class="close" onclick="closeSupport()">Жабуу</button>
+</div>
 </div>
 
 <!-- Firebase SDK -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
-  import {
-    getFirestore,
-    collection,
-    addDoc,
-    onSnapshot,
-    query,
-    orderBy,
-    serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-  import {
-    getStorage,
-    ref,
-    uploadBytes,
-    getDownloadURL
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCnCmsNUI8qm4K3MpRFNVIXtsN9Dk7OFqY",
-    authDomain: "kyrgyz-avto.firebaseapp.com",
-    projectId: "kyrgyz-avto",
-    storageBucket: "kyrgyz-avto.firebasestorage.app",
-    messagingSenderId: "537668219444",
-    appId: "1:537668219444:web:715a50dd4054a4faf3d061",
-    measurementId: "G-2ZJP03J20F"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyCnCmsNUI8qm4K3MpRFNVIXtsN9Dk7OFqY",
+  authDomain: "kyrgyz-avto.firebaseapp.com",
+  projectId: "kyrgyz-avto",
+  storageBucket: "kyrgyz-avto.firebasestorage.app",
+  messagingSenderId: "537668219444",
+  appId: "1:537668219444:web:715a50dd4054a4faf3d061",
+  measurementId: "G-2ZJP03J20F"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const db = getFirestore(app);
-  const storage = getStorage(app);
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-  window.firebaseApp = app;
-  window.firebaseDb = db;
-  window.firebaseStorage = storage;
-  window.firestoreFns = { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp };
-  window.storageFns = { ref, uploadBytes, getDownloadURL };
-
-  window.dispatchEvent(new Event("firebase-ready"));
+window.firebaseApp = app;
+window.firebaseDb = db;
+window.firebaseStorage = storage;
+window.firestoreFns = { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp };
+window.storageFns = { ref, uploadBytes, getDownloadURL };
+window.dispatchEvent(new Event("firebase-ready"));
 </script>
 
 <script>
+/* ====== Колдоо кызматынын байланыш маалыматы ======
+   Бул жерди өз номериңизге/юзернейминизге алмаштырыңыз. */
+const SUPPORT_PHONE = "+996700000000";
+const SUPPORT_WHATSAPP = "996700000000"; // код менен, + жана боштук жок
+const SUPPORT_TELEGRAM = "https://t.me/your_username";
+
+document.getElementById("supportWa").href = "https://wa.me/" + SUPPORT_WHATSAPP;
+document.getElementById("supportTg").href = SUPPORT_TELEGRAM;
+document.getElementById("supportCall").href = "tel:" + SUPPORT_PHONE;
+
+function openSupport() {
+  document.getElementById("supportOverlay").classList.add("open");
+}
+function closeSupport() {
+  document.getElementById("supportOverlay").classList.remove("open");
+}
+function closeSupportOnOverlay(e) {
+  if (e.target.id === "supportOverlay") closeSupport();
+}
+
 const models = {
-    Toyota: ["Camry","Corolla","Prius","RAV4","Land Cruiser 100","Land Cruiser 200","Land Cruiser 300","Prado","Highlander","Harrier","Vitz","Aqua","Crown","Mark II","Alphard","Hiace"],
-    BMW: ["3 Series","5 Series","7 Series","X1","X3","X5","X6","X7","M3","M5"],
-    "Mercedes-Benz": ["C-Class","E-Class","S-Class","A-Class","GLA","GLC","GLE","GLS","G-Class","V-Class"],
-    Lexus: ["ES","IS","GS","LS","NX","RX","GX","LX"],
-    Honda: ["Civic","Accord","CR-V","Fit","Pilot","Odyssey"],
-    Hyundai: ["Accent","Elantra","Sonata","Tucson","Santa Fe","Palisade","Creta"],
-    Kia: ["Rio","K5","K7","Sportage","Sorento","Carnival","Seltos"],
-    Volkswagen: ["Golf","Passat","Jetta","Polo","Tiguan","Touareg"],
-    Audi: ["A3","A4","A6","A8","Q3","Q5","Q7","Q8"],
-    Nissan: ["Almera","Teana","X-Trail","Qashqai","Patrol","Murano","Serena"],
-    Mitsubishi: ["Lancer","Outlander","Pajero","Pajero Sport","ASX"],
-    Subaru: ["Forester","Impreza","Legacy","Outback","XV"],
-    Chevrolet: ["Malibu","Cobalt","Nexia","Spark","Tracker","Tahoe"],
-    Ford: ["Focus","Fusion","Explorer","Escape","Mustang","F-150"],
-    "Land Rover": ["Range Rover","Range Rover Sport","Discovery","Defender","Evoque"],
-    Porsche: ["Cayenne","Panamera","Macan","911"],
-    Tesla: ["Model 3","Model S","Model X","Model Y"],
-    Geely: ["Coolray","Atlas","Monjaro","Emgrand"],
-    Chery: ["Tiggo 4","Tiggo 7","Tiggo 8","Arrizo 5"],
-    BYD: ["Dolphin","Atto 3","Han","Tang","Seal"]
+  Toyota: ["Camry","Corolla","Prius","RAV4","Land Cruiser 100","Land Cruiser 200","Land Cruiser 300","Prado","Highlander","Harrier","Vitz","Aqua","Crown","Mark II","Alphard","Hiace"],
+  BMW: ["3 Series","5 Series","7 Series","X1","X3","X5","X6","X7","M3","M5"],
+  "Mercedes-Benz": ["C-Class","E-Class","S-Class","A-Class","GLA","GLC","GLE","GLS","G-Class","V-Class"],
+  Lexus: ["ES","IS","GS","LS","NX","RX","GX","LX"],
+  Honda: ["Civic","Accord","CR-V","Fit","Pilot","Odyssey"],
+  Hyundai: ["Accent","Elantra","Sonata","Tucson","Santa Fe","Palisade","Creta"],
+  Kia: ["Rio","K5","K7","Sportage","Sorento","Carnival","Seltos"],
+  Volkswagen: ["Golf","Passat","Jetta","Polo","Tiguan","Touareg"],
+  Audi: ["A3","A4","A6","A8","Q3","Q5","Q7","Q8"],
+  Nissan: ["Almera","Teana","X-Trail","Qashqai","Patrol","Murano","Serena"],
+  Mitsubishi: ["Lancer","Outlander","Pajero","Pajero Sport","ASX"],
+  Subaru: ["Forester","Impreza","Legacy","Outback","XV"],
+  Chevrolet: ["Malibu","Cobalt","Nexia","Spark","Tracker","Tahoe"],
+  Ford: ["Focus","Fusion","Explorer","Escape","Mustang","F-150"],
+  "Land Rover": ["Range Rover","Range Rover Sport","Discovery","Defender","Evoque"],
+  Porsche: ["Cayenne","Panamera","Macan","911"],
+  Tesla: ["Model 3","Model S","Model X","Model Y"],
+  Geely: ["Coolray","Atlas","Monjaro","Emgrand"],
+  Chery: ["Tiggo 4","Tiggo 7","Tiggo 8","Arrizo 5"],
+  BYD: ["Dolphin","Atto 3","Han","Tang","Seal"]
 };
 
 const yearSelect = document.getElementById("year");
 for (let year = 2026; year >= 1980; year--) {
-    const option = document.createElement("option");
-    option.value = year;
-    option.textContent = year;
-    yearSelect.appendChild(option);
+  const option = document.createElement("option");
+  option.value = year;
+  option.textContent = year;
+  yearSelect.appendChild(option);
 }
 
 function changeModel() {
-    const brand = document.getElementById("brand").value;
-    const model = document.getElementById("model");
-    model.innerHTML = '<option value="">Модель тандаңыз</option>';
-    if (!models[brand]) return;
-    models[brand].forEach(function(name) {
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        model.appendChild(option);
-    });
+  const brand = document.getElementById("brand").value;
+  const model = document.getElementById("model");
+  model.innerHTML = '<option value="">Модель тандаңыз</option>';
+  if (!models[brand]) return;
+  models[brand].forEach(function(name) {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    model.appendChild(option);
+  });
 }
 
+document.getElementById("photo").addEventListener("change", function() {
+  const n = this.files.length;
+  document.getElementById("photoCount").textContent = n ? ("Тандалды: " + n + " сүрөт") : "";
+});
+
 function openForm() {
-    document.getElementById("form").style.display = "block";
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  document.getElementById("form").style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function closeForm() {
-    document.getElementById("form").style.display = "none";
+  document.getElementById("form").style.display = "none";
 }
 
 let cars = [];
 
 async function addCar() {
-    const brand = document.getElementById("brand").value;
-    const model = document.getElementById("model").value;
-    const year = document.getElementById("year").value;
-    const body = document.getElementById("body").value;
-    const fuel = document.getElementById("fuel").value;
-    const transmission = document.getElementById("transmission").value;
-    const drive = document.getElementById("drive").value;
-    const mileage = document.getElementById("mileage").value;
-    const color = document.getElementById("color").value;
-    const price = document.getElementById("price").value;
-    const city = document.getElementById("city").value;
-    const phone = document.getElementById("phone").value;
-    const description = document.getElementById("description").value;
-    const photoInput = document.getElementById("photo");
+  const brand = document.getElementById("brand").value;
+  const model = document.getElementById("model").value;
+  const year = document.getElementById("year").value;
+  const body = document.getElementById("body").value;
+  const fuel = document.getElementById("fuel").value;
+  const transmission = document.getElementById("transmission").value;
+  const drive = document.getElementById("drive").value;
+  const mileage = document.getElementById("mileage").value;
+  const color = document.getElementById("color").value;
+  const price = document.getElementById("price").value;
+  const city = document.getElementById("city").value;
+  const phone = document.getElementById("phone").value;
+  const description = document.getElementById("description").value;
+  const photoInput = document.getElementById("photo");
 
-    if (!brand || !model || !year || !body || !fuel || !transmission || !drive || !price || !city || !phone) {
-        alert("Бардык негизги талааларды толтуруңуз!");
-        return;
+  if (!brand || !model || !year || !body || !fuel || !transmission || !drive || !price || !city || !phone) {
+    alert("Бардык негизги талааларды толтуруңуз!");
+    return;
+  }
+
+  const saveBtn = document.getElementById("saveBtn");
+  saveBtn.disabled = true;
+
+  try {
+    const { ref, uploadBytes, getDownloadURL } = window.storageFns;
+    const files = Array.from(photoInput.files || []);
+    const photos = [];
+
+    for (let i = 0; i < files.length; i++) {
+      saveBtn.textContent = "⏳ Сүрөт жүктөлүүдө (" + (i + 1) + "/" + files.length + ")...";
+      const file = files[i];
+      const fileRef = ref(window.firebaseStorage, "cars/" + Date.now() + "_" + i + "_" + file.name);
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+      photos.push(url);
     }
 
-    const saveBtn = document.getElementById("saveBtn");
-    saveBtn.disabled = true;
     saveBtn.textContent = "⏳ Жарыяланып жатат...";
 
-    try {
-        let photoUrl = "";
-        const file = photoInput.files[0];
+    const { collection, addDoc, serverTimestamp } = window.firestoreFns;
+    await addDoc(collection(window.firebaseDb, "cars"), {
+      brand, model, year, body, fuel, transmission, drive,
+      mileage, color, price, city, phone, description,
+      photos: photos,
+      photo: photos[0] || "",
+      createdAt: serverTimestamp()
+    });
 
-        if (file) {
-            const { ref, uploadBytes, getDownloadURL } = window.storageFns;
-            const fileRef = ref(window.firebaseStorage, "cars/" + Date.now() + "_" + file.name);
-            await uploadBytes(fileRef, file);
-            photoUrl = await getDownloadURL(fileRef);
-        }
+    closeForm();
+    alert("✅ Жарыя ийгиликтүү кошулду!");
+    document.getElementById("form").querySelectorAll("input, select, textarea").forEach(function(el) {
+      if (el.type !== "button") el.value = "";
+    });
+    document.getElementById("photoCount").textContent = "";
+  } catch (error) {
+    console.error(error);
+    alert("❌ Ката кетти: " + error.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "✅ Жарыяны чыгаруу";
+  }
+}
 
-        const { collection, addDoc, serverTimestamp } = window.firestoreFns;
-        await addDoc(collection(window.firebaseDb, "cars"), {
-            brand, model, year, body, fuel, transmission, drive,
-            mileage, color, price, city, phone, description,
-            photo: photoUrl,
-            createdAt: serverTimestamp()
-        });
-
-        closeForm();
-        alert("✅ Жарыя ийгиликтүү кошулду!");
-        document.getElementById("form").querySelectorAll("input, select, textarea").forEach(function(el) {
-            if (el.type !== "button") el.value = "";
-        });
-    } catch (error) {
-        console.error(error);
-        alert("❌ Ката кетти: " + error.message);
-    } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = "✅ Жарыяны чыгаруу";
-    }
+function getPhotos(car) {
+  if (Array.isArray(car.photos) && car.photos.length) return car.photos;
+  if (car.photo) return [car.photo];
+  return [];
 }
 
 function showCars() {
-    const list = document.getElementById("cars");
-    const search = document.getElementById("search").value.toLowerCase();
-    const minPrice = Number(document.getElementById("minPrice").value) || 0;
-    const maxPrice = Number(document.getElementById("maxPrice").value) || Infinity;
-    const filterBrand = document.getElementById("filterBrand").value;
+  const list = document.getElementById("cars");
+  const search = document.getElementById("search").value.toLowerCase();
+  const minPrice = Number(document.getElementById("minPrice").value) || 0;
+  const maxPrice = Number(document.getElementById("maxPrice").value) || Infinity;
+  const filterBrand = document.getElementById("filterBrand").value;
 
-    const filtered = cars.filter(function(car) {
-        const text = (car.brand + " " + car.model + " " + car.city).toLowerCase();
-        const matchesSearch = text.includes(search);
-        const carPrice = Number(car.price);
-        const matchesPrice = carPrice >= minPrice && carPrice <= maxPrice;
-        const matchesBrand = !filterBrand || car.brand === filterBrand;
-        return matchesSearch && matchesPrice && matchesBrand;
-    });
+  const filtered = cars.filter(function(car) {
+    const text = (car.brand + " " + car.model + " " + car.city).toLowerCase();
+    const matchesSearch = text.includes(search);
+    const carPrice = Number(car.price);
+    const matchesPrice = carPrice >= minPrice && carPrice <= maxPrice;
+    const matchesBrand = !filterBrand || car.brand === filterBrand;
+    return matchesSearch && matchesPrice && matchesBrand;
+  });
 
-    if (filtered.length === 0) {
-        list.innerHTML = '<div class="empty">🚗 Азырынча жарыя жок</div>';
-        return;
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty">🚗 Азырынча жарыя жок</div>';
+    return;
+  }
+
+  list.innerHTML = "";
+  filtered.forEach(function(car) {
+    const photos = getPhotos(car);
+    const cardEl = document.createElement("div");
+    cardEl.className = "card";
+
+    let galleryHtml;
+    if (photos.length === 0) {
+      galleryHtml = '<div class="card-gallery"><div class="noPhoto">📷</div></div>';
+    } else {
+      const imgs = photos.map(function(url, i) {
+        return '<img src="' + url + '" class="' + (i === 0 ? "active" : "") + '" data-i="' + i + '">';
+      }).join("");
+      const dots = photos.length > 1 ? '<div class="gallery-dots">' + photos.map(function(_, i) {
+        return '<span class="' + (i === 0 ? "active" : "") + '"></span>';
+      }).join("") + '</div>' : "";
+      const navs = photos.length > 1 ? '<button class="gallery-nav prev">‹</button><button class="gallery-nav next">›</button>' : "";
+      const count = photos.length > 1 ? '<div class="gallery-count">1/' + photos.length + '</div>' : "";
+      galleryHtml = '<div class="card-gallery" data-index="0">' + imgs + navs + dots + count + '</div>';
     }
 
-    list.innerHTML = "";
-
-    filtered.forEach(function(car) {
-        const cardEl = document.createElement("div");
-        cardEl.className = "card";
-
-        const image = car.photo ? `<img src="${car.photo}">` : "";
-
-        cardEl.innerHTML = `
-            ${image}
-            <div class="card-content">
-                <h2>${car.brand} ${car.model}</h2>
-                <div class="price">${Number(car.price).toLocaleString()} сом</div>
-                <div class="info">📅 Жылы: ${car.year}</div>
-                <div class="info">🚘 Кузов: ${car.body}</div>
-                <div class="info">⛽ Мотор: ${car.fuel}</div>
-                <div class="info">⚙️ Коробка: ${car.transmission}</div>
-                <div class="info">🛞 Жетек: ${car.drive}</div>
-                <div class="info">📏 Пробег: ${car.mileage || "көрсөтүлгөн эмес"} км</div>
-                <div class="info">🎨 Түсү: ${car.color || "көрсөтүлгөн эмес"}</div>
-                <div class="info">📍 ${car.city}</div>
-                <p>${car.description || ""}</p>
-                <a class="phone" href="tel:${car.phone}">📞 ${car.phone}</a>
-            </div>
-        `;
-
-        list.appendChild(cardEl);
-    });
-}
-
-window.addEventListener("firebase-ready", function() {
-    const { collection, onSnapshot, query, orderBy } = window.firestoreFns;
-    const carsQuery = query(collection(window.firebaseDb, "cars"), orderBy("createdAt", "desc"));
-
-    onSnapshot(carsQuery, function(snapshot) {
-        cars = snapshot.docs.map(function(doc) {
-            return Object.assign({ id: doc.id }, doc.data());
-        });
-        showCars();
-    }, function(error) {
-        console.error("Firestore error:", error);
-        document.getElementById("cars").innerHTML = '<div class="empty">❌ Маалымат жүктөлбөдү. Интернетти текшериңиз.</div>';
-    });
-});
-</script>
-
-</body>
-                                       </html>
+    cardEl.innerHTML = galleryHtml + `
+      <div class="card-content">
+        <h2>${car.brand} ${car.model}</h2>
+        <div class="price">${Number(car.price).toLocaleString()} сом</div>
+        <div class="info">📅 Жылы: ${car.year}</div>
+        <div class="info">🚘 Кузов: ${car.body}</div>
+        <div
