@@ -454,3 +454,157 @@ function showCars() {
         <h2>${car.brand} ${car.model}</h2>
         <div class="price">${Number(car.price).toLocaleString()} сом</div>
         <div class="info">📅 Жылы: ${car.year}</div>
+<div class="info">📅 Жылы: ${car.year}</div>
+        <div class="info">🚘 Кузов: ${car.body}</div>
+        <div class="info">⛽ Мотор: ${car.fuel}</div>
+        <div class="info">⚙️ Коробка: ${car.transmission}</div>
+        <div class="info">🛞 Жетек: ${car.drive}</div>
+        <div class="info">📏 Пробег: ${car.mileage || "көрсөтүлгөн эмес"} км</div>
+        <div class="info">🎨 Түсү: ${car.color || "көрсөтүлгөн эмес"}</div>
+        <div class="info">📍 ${car.city}</div>
+        <a class="phone" href="tel:${car.phone}">📞 ${car.phone}</a>
+      </div>
+    `;
+
+    // Gallery nav handlers (stop propagation so card click doesn't fire)
+    const galleryEl = cardEl.querySelector(".card-gallery");
+    if (photos.length > 1) {
+      const prevBtn = cardEl.querySelector(".gallery-nav.prev");
+      const nextBtn = cardEl.querySelector(".gallery-nav.next");
+      const setIndex = function(newIndex) {
+        const total = photos.length;
+        const idx = (newIndex + total) % total;
+        galleryEl.dataset.index = idx;
+        galleryEl.querySelectorAll("img").forEach(function(img) {
+          img.classList.toggle("active", Number(img.dataset.i) === idx);
+        });
+        galleryEl.querySelectorAll(".gallery-dots span").forEach(function(dot, i) {
+          dot.classList.toggle("active", i === idx);
+        });
+        const countEl = galleryEl.querySelector(".gallery-count");
+        if (countEl) countEl.textContent = (idx + 1) + "/" + total;
+      };
+      prevBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        setIndex(Number(galleryEl.dataset.index) - 1);
+      });
+      nextBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        setIndex(Number(galleryEl.dataset.index) + 1);
+      });
+    }
+
+    cardEl.addEventListener("click", function() {
+      openDetail(car);
+    });
+
+    list.appendChild(cardEl);
+  });
+}
+
+/* ====== Машинанын толук барагы (модалдык терезе) ====== */
+let currentDetailPhotos = [];
+let currentDetailIndex = 0;
+
+function openDetail(car) {
+  const photos = getPhotos(car);
+  currentDetailPhotos = photos;
+  currentDetailIndex = 0;
+
+  document.getElementById("detailTitle").textContent = car.brand + " " + car.model;
+
+  renderModalGallery();
+
+  const thumbRow = document.getElementById("thumbRow");
+  if (photos.length > 1) {
+    thumbRow.style.display = "flex";
+    thumbRow.innerHTML = photos.map(function(url, i) {
+      return '<img src="' + url + '" class="' + (i === 0 ? "active" : "") + '" data-i="' + i + '">';
+    }).join("");
+    thumbRow.querySelectorAll("img").forEach(function(img) {
+      img.addEventListener("click", function() {
+        currentDetailIndex = Number(this.dataset.i);
+        renderModalGallery();
+        thumbRow.querySelectorAll("img").forEach(function(t) {
+          t.classList.toggle("active", Number(t.dataset.i) === currentDetailIndex);
+        });
+      });
+    });
+  } else {
+    thumbRow.style.display = "none";
+    thumbRow.innerHTML = "";
+  }
+
+  document.getElementById("detailBody").innerHTML = `
+    <div class="price">${Number(car.price).toLocaleString()} сом</div>
+    <div class="info">📅 Жылы: ${car.year}</div>
+    <div class="info">🚘 Кузов: ${car.body}</div>
+    <div class="info">⛽ Мотор: ${car.fuel}</div>
+    <div class="info">⚙️ Коробка: ${car.transmission}</div>
+    <div class="info">🛞 Жетек: ${car.drive}</div>
+    <div class="info">📏 Пробег: ${car.mileage || "көрсөтүлгөн эмес"} км</div>
+    <div class="info">🎨 Түсү: ${car.color || "көрсөтүлгөн эмес"}</div>
+    <div class="info">📍 ${car.city}</div>
+    <p>${car.description || ""}</p>
+    <a class="phone" href="tel:${car.phone}">📞 ${car.phone}</a>
+  `;
+
+  document.getElementById("detailOverlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function renderModalGallery() {
+  const galleryEl = document.getElementById("modalGallery");
+  if (currentDetailPhotos.length === 0) {
+    galleryEl.innerHTML = '<div class="noPhoto">📷</div>';
+    return;
+  }
+  const imgs = currentDetailPhotos.map(function(url, i) {
+    return '<img src="' + url + '" class="' + (i === currentDetailIndex ? "active" : "") + '">';
+  }).join("");
+  const navs = currentDetailPhotos.length > 1
+    ? '<button class="gallery-nav prev" onclick="modalPrev()">‹</button><button class="gallery-nav next" onclick="modalNext()">›</button><div class="gallery-count">' + (currentDetailIndex + 1) + '/' + currentDetailPhotos.length + '</div>'
+    : "";
+  galleryEl.innerHTML = imgs + navs;
+}
+
+function modalPrev() {
+  currentDetailIndex = (currentDetailIndex - 1 + currentDetailPhotos.length) % currentDetailPhotos.length;
+  renderModalGallery();
+  syncThumbs();
+}
+function modalNext() {
+  currentDetailIndex = (currentDetailIndex + 1) % currentDetailPhotos.length;
+  renderModalGallery();
+  syncThumbs();
+}
+function syncThumbs() {
+  document.querySelectorAll("#thumbRow img").forEach(function(t) {
+    t.classList.toggle("active", Number(t.dataset.i) === currentDetailIndex);
+  });
+}
+
+function closeDetail() {
+  document.getElementById("detailOverlay").classList.remove("open");
+  document.body.style.overflow = "";
+}
+function closeDetailOnOverlay(e) {
+  if (e.target.id === "detailOverlay") closeDetail();
+}
+
+window.addEventListener("firebase-ready", function() {
+  const { collection, onSnapshot, query, orderBy } = window.firestoreFns;
+  const carsQuery = query(collection(window.firebaseDb, "cars"), orderBy("createdAt", "desc"));
+  onSnapshot(carsQuery, function(snapshot) {
+    cars = snapshot.docs.map(function(doc) {
+      return Object.assign({ id: doc.id }, doc.data());
+    });
+    showCars();
+  }, function(error) {
+    console.error("Firestore error:", error);
+    document.getElementById("cars").innerHTML = '<div class="empty">❌ Маалымат жүктөлбөдү. Интернетти текшериңиз.</div>';
+  });
+});
+</script>
+</body>
+</html>
